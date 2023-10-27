@@ -1,0 +1,4 @@
+---
+nfs_v4_only: true
+
+nfs_exports: []

@@ -1,0 +1,14 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+
+  vars:
+    nfs_v4_only: true
+    nfs_exports:
+      - "/srv/homes       192.168.121.1(rw,sync,no_root_squash,no_subtree_check)"
+
+  tasks:
+    - name: "Include palekiwi.nfs"
+      ansible.builtin.include_role:
+        name: "palekiwi.nfs"

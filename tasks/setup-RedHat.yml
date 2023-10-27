@@ -1,0 +1,31 @@
+---
+- name: Ensure NFS utilities are installed.
+  ansible.builtin.dnf:
+    name: nfs-utils
+    state: present
+
+- name: Ensure rpcbind is stopped, disabled and masked.
+  when: nfs_v4_only
+  ansible.builtin.systemd_service:
+    name: rpcbind
+    state: stopped
+    enabled: false
+    masked: true
+    daemon_reload: true
+
+- name: Ensure rpcbind is started, enabled and unmasked.
+  when: not nfs_v4_only
+  ansible.builtin.systemd_service:
+    name: rpcbind
+    state: started
+    enabled: true
+    masked: false
+    daemon_reload: true
+
+- name: Ensure nfs service is enabled in firewall.
+  become: true
+  ansible.posix.firewalld:
+    service: nfs
+    state: enabled
+    permanent: true
+  notify: Restart firewalld

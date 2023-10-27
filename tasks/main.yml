@@ -1,0 +1,46 @@
+---
+# Include variables and define needed variables.
+- name: Include OS-specific variables.
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+
+# Setup/install tasks.
+- name: Include tasks for RedHat.
+  ansible.builtin.include_tasks: setup-RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Include tasks for RedHat.
+  ansible.builtin.include_tasks: setup-Debian.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure directories to export exist
+  ansible.builtin.file:
+    path: "{{ item.strip().split()[0] }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ nfs_exports }}"
+
+- name: Install /etc/exports template.
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nfs
+
+- name: Ensure nfs3 is setup as required.
+  community.general.ini_file:
+    path: /etc/nfs.conf
+    section: nfsd
+    state: present
+    option: vers3
+    mode: "0644"
+    value: "{{ nfs_v4_only | ternary('no', 'yes') }}"
+
+
+- name: Ensure nfs is running.
+  ansible.builtin.service:
+    name: "{{ nfs_server_daemon }}"
+    state: started
+    enabled: true
+  when: nfs_exports | length > 0

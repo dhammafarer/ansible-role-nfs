@@ -1,0 +1,9 @@
+---
+- name: Ensure NFS utilities are installed.
+  ansible.builtin.apt:
+    name:
+      - nfs-common
+      - nfs-kernel-server
+    state: present
+    update_cache: true
+    cache_valid_time: 600
